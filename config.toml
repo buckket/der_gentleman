@@ -1,0 +1,18 @@
+## TWITTER
+## https://python-twitter.readthedocs.io/en/latest/getting_started.html#getting-your-application-tokens
+TWITTER_CONSUMER_KEY = ""
+TWITTER_CONSUMER_SECRET = ""
+TWITTER_ACCESS_TOKEN = ""
+TWITTER_ACCESS_TOKEN_SECRET = ""
+TWITTER_USERNAME = ""
+
+## INSTAGRAM
+INSTAGRAM_USERNAME = ""
+INSTAGRAM_PASSWORD = ""
+INSTAGRAM_TARGET = 123
+
+## DATABASE
+DATABASE_FILE = "./comments.db"
+
+## GOINSTA
+GOINSTA_FILE = "./.goinsta"

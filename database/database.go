@@ -23,10 +23,10 @@ func (db *Database) AutoMigrate() error {
 func (db *Database) CreateTableProfiles() error {
 	sqlStmt := `
 		CREATE TABLE IF NOT EXISTS profiles(
-			id 			INTEGER PRIMARY KEY AUTOINCREMENT,
+			id			INTEGER PRIMARY KEY AUTOINCREMENT,
 			ig_id		INTEGER NOT NULL UNIQUE,
 			username	VARCHAR(255) NOT NULL,
-			last_check 	DATETIME
+			last_check	DATETIME
         );
     `
 	_, err := db.Exec(sqlStmt)
@@ -36,11 +36,11 @@ func (db *Database) CreateTableProfiles() error {
 func (db *Database) CreateTableComments() error {
 	sqlStmt := `
 		CREATE TABLE IF NOT EXISTS comments(
-			id 				INTEGER PRIMARY KEY AUTOINCREMENT,
-			ig_id			INTEGER NOT NULL UNIQUE,
-			text 			TEXT,
-			op_profile		INTEGER NOT NULL,
-			op_code			VARCHAR(255) NOT NULL,
+			id 			INTEGER PRIMARY KEY AUTOINCREMENT,
+			ig_id		INTEGER NOT NULL UNIQUE,
+			text 		TEXT,
+			op_profile	INTEGER NOT NULL,
+			op_code		VARCHAR(255) NOT NULL,
             FOREIGN KEY(op_profile) REFERENCES profiles(ig_id)
         );
     `

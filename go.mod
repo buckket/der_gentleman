@@ -13,3 +13,5 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/spf13/viper v1.6.2
 )
+
+replace github.com/ahmdrz/goinsta/v2 => github.com/buckket/goinsta/v2 v2.4.6-0.20200401235525-0daaded545d6

@@ -94,7 +94,7 @@ func main() {
 	}
 	log.Printf("Target confirmed: %s", profile.Username)
 
-	followers := profile.Followers()
+	followers := profile.Following()
 	err = followers.Error()
 	if err != nil {
 		log.Fatal(err)
@@ -150,7 +150,6 @@ func (env *Env) handleUser(user *goinsta.User) {
 		log.Printf("error while updating profile: %s", err)
 		return
 	}
-	time.Sleep(time.Minute)
 }
 
 func (env *Env) handleItem(item *goinsta.Item) {
@@ -184,7 +183,7 @@ func (env *Env) handleItem(item *goinsta.Item) {
 					}
 					log.Printf("%s - %s", dbComment.GenerateURL(),
 						utils.GenerateTweetURL(viper.GetString("TWITTER_USERNAME"), tweet.Id))
-
+					time.Sleep(time.Minute)
 				} else {
 					log.Printf("Old comment, skipping...")
 				}

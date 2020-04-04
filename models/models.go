@@ -22,5 +22,5 @@ type Comment struct {
 }
 
 func (c *Comment) GenerateURL() string {
-	return fmt.Sprintf("https://www.instagram.com/p/%s/c/%d/", c.OpCode, c.IGID)
+	return fmt.Sprintf("https://www.instagram.com/p/%s/", c.OpCode)
 }

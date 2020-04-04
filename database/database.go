@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/buckket/der_gentleman/models"
 	_ "github.com/mattn/go-sqlite3"
+	"time"
 )
 
 type Database struct {
@@ -81,6 +82,27 @@ func (db *Database) ProfileByIGID(ig_id int64) (*models.Profile, error) {
 		return nil, err
 	}
 	return &profile, nil
+}
+
+func (db *Database) ProfilesByLastChanged() (map[int64]time.Time, error) {
+	m := make(map[int64]time.Time)
+
+	rows, err := db.Query("SELECT ig_id, last_check FROM profiles")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var igID int64
+		var lastChanged time.Time
+		err = rows.Scan(&igID, &lastChanged)
+		if err != nil {
+			return nil, err
+		}
+		m[igID] = lastChanged
+	}
+	return m, nil
 }
 
 func (db *Database) ProfileUpdate(profile *models.Profile) error {

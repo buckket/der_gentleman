@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"sort"
 	"time"
 )
 
@@ -23,6 +24,7 @@ type Env struct {
 }
 
 var cfgFile string
+var lastTweet time.Time
 
 func initConfig() {
 	if cfgFile != "" {
@@ -94,16 +96,39 @@ func main() {
 	}
 	log.Printf("Target confirmed: %s", profile.Username)
 
+	var users []goinsta.User
 	followers := profile.Following()
+	for followers.Next() {
+		err = followers.Error()
+		if err != nil && err != goinsta.ErrNoMore {
+			log.Fatal(err)
+		}
+		users = append(users, followers.Users...)
+	}
 	err = followers.Error()
+	if err != nil && err != goinsta.ErrNoMore {
+		log.Fatal(err)
+	}
+
+	lastChangedMap, err := env.DB.ProfilesByLastChanged()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for followers.Next() {
-		for _, u := range followers.Users {
-			env.handleUser(&u)
+	sort.Slice(users, func(i, j int) bool {
+		dbI, ok := lastChangedMap[users[i].ID]
+		if !ok {
+			return true
 		}
+		dbJ, ok := lastChangedMap[users[j].ID]
+		if !ok {
+			return false
+		}
+		return dbI.Before(dbJ)
+	})
+
+	for _, u := range users {
+		env.handleUser(&u)
 	}
 }
 
@@ -153,40 +178,55 @@ func (env *Env) handleUser(user *goinsta.User) {
 }
 
 func (env *Env) handleItem(item *goinsta.Item) {
+	if item.CommentsDisabled {
+		log.Printf("Comments disabled, skipping...")
+		return
+	}
+
+	if item.CommentCount > 1000 {
+		log.Printf("Too many comments, skipping...")
+	}
+
 	item.Comments.Sync()
 	for item.Comments.Next() {
 		for _, comment := range item.Comments.Items {
-			if comment.UserID == env.Target {
-				dbComment, err := env.DB.CommentByIGID(comment.ID)
-				if err != nil && err != sql.ErrNoRows {
-					log.Printf("error while fetching comment from database: %s", err)
-					return
+			if comment.UserID != env.Target {
+				continue
+			}
+			dbComment, err := env.DB.CommentByIGID(comment.ID)
+			if err != nil && err != sql.ErrNoRows {
+				log.Printf("error while fetching comment from database: %s", err)
+				return
+			}
+			if dbComment == nil {
+				dbComment = &models.Comment{
+					IGID:          comment.ID,
+					Text:          comment.Text,
+					OpProfileIGID: item.User.ID,
+					OpCode:        item.Code,
 				}
+				_, err := env.DB.InsertComment(dbComment)
+				if err != nil {
+					log.Printf("error while inserting comment to database: %s", err)
+				}
+				log.Printf("[%s] (%d) %s", item.User.Username, dbComment.IGID, dbComment.Text)
 
-				if dbComment == nil {
-					dbComment = &models.Comment{
-						IGID:          comment.ID,
-						Text:          comment.Text,
-						OpProfileIGID: item.User.ID,
-						OpCode:        item.Code,
-					}
-					_, err := env.DB.InsertComment(dbComment)
-					if err != nil {
-						log.Printf("error while inserting comment to database: %s", err)
-					}
-					log.Printf("[%s] (%d) %s", item.User.Username, dbComment.IGID, dbComment.Text)
-					tweet, err := env.Twitter.PostTweet(fmt.Sprintf("%s %s",
-						utils.TruncateString(comment.Text, 256),
-						dbComment.GenerateURL()), url.Values{})
-					if err != nil {
-						log.Fatal(err)
-					}
-					log.Printf("%s - %s", dbComment.GenerateURL(),
-						utils.GenerateTweetURL(viper.GetString("TWITTER_USERNAME"), tweet.Id))
-					time.Sleep(time.Minute)
-				} else {
-					log.Printf("Old comment, skipping...")
+				td := time.Now().Sub(lastTweet)
+				if td < time.Hour {
+					log.Printf("Last tweet was only %f minutes ago, waiting...", td.Minutes())
+					time.Sleep(time.Hour - td)
 				}
+				tweet, err := env.Twitter.PostTweet(fmt.Sprintf("%s %s",
+					utils.TruncateString(comment.Text, 256),
+					dbComment.GenerateURL()), url.Values{})
+				if err != nil {
+					log.Fatal(err)
+				}
+				lastTweet = time.Now()
+				log.Printf("%s - %s", dbComment.GenerateURL(),
+					utils.GenerateTweetURL(viper.GetString("TWITTER_USERNAME"), tweet.Id))
+			} else {
+				log.Printf("Old comment, skipping...")
 			}
 		}
 	}

@@ -11,6 +11,8 @@ require (
 	github.com/dustin/gojson v0.0.0-20160307161227-2e71ec9dd5ad // indirect
 	github.com/garyburd/go-oauth v0.0.0-20180319155456-bca2e7f09a17 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
+	github.com/mb-14/gomarkov v0.0.0-20190125094512-044dd0dcb5e7
+	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.6.2
 )
 

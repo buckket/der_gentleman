@@ -1,4 +1,7 @@
 .idea/
 .goinsta
+bot_since_id
+model.json
 *.db
 *.bak
+*.ipynb

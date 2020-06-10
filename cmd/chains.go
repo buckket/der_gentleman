@@ -33,7 +33,7 @@ func chains(cmd *cobra.Command, args []string) {
 		log.Fatalf("could not get comments: %s", err)
 	}
 
-	chain := gomarkov.NewChain(1)
+	chain := gomarkov.NewChain(2)
 	for _, s := range *texts {
 		chain.Add(strings.Split(s, " "))
 	}

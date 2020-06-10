@@ -75,12 +75,16 @@ func bot(cmd *cobra.Command, args []string) {
 }
 
 func generateTweet(chain *gomarkov.Chain) string {
-	tokens := []string{gomarkov.StartToken}
+	order := chain.Order
+	tokens := make([]string, 0)
+	for i := 0; i < order; i++ {
+		tokens = append(tokens, gomarkov.StartToken)
+	}
 	for tokens[len(tokens)-1] != gomarkov.EndToken {
-		next, _ := chain.Generate(tokens[(len(tokens) - 1):])
+		next, _ := chain.Generate(tokens[(len(tokens) - order):])
 		tokens = append(tokens, next)
 	}
-	return strings.Join(tokens[1:len(tokens)-1], " ")
+	return strings.Join(tokens[order:len(tokens)-1], " ")
 }
 
 func readSinceID() int64 {

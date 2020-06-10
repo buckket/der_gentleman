@@ -87,7 +87,7 @@ func scrape(cmd *cobra.Command, args []string) {
 	}
 	log.Printf("Target confirmed: %s", env.Target.Username)
 
-	users, err := env.GetUserDB()
+	users, err := env.GetUserIG(true)
 	if err != nil {
 		log.Printf("error while getting users from instagram: %s", err)
 		users, err = env.GetUserDB()

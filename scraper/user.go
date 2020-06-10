@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func (env *Env) GetUserIG() ([]goinsta.User, error) {
+func (env *Env) GetUserIG(sync bool) ([]goinsta.User, error) {
 	var users []goinsta.User
 
 	followers := env.Target.Following()
@@ -43,14 +43,16 @@ func (env *Env) GetUserIG() ([]goinsta.User, error) {
 		return dbI.Before(dbJ)
 	})
 
-	for _, u := range users {
-		if u.IsPrivate {
-			err := u.Follow()
-			if err != nil {
-				log.Printf("coult not follow %s: %s", u.Username, err)
+	if sync {
+		for _, u := range users {
+			if u.IsPrivate {
+				err := u.Follow()
+				if err != nil {
+					log.Printf("coult not follow %s: %s", u.Username, err)
+				}
+				log.Printf("send follow request to %s", u.Username)
+				time.Sleep(1 * time.Minute)
 			}
-			log.Printf("send follow request to %s", u.Username)
-			time.Sleep(1 * time.Minute)
 		}
 	}
 

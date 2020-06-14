@@ -7,6 +7,7 @@ import (
 	"github.com/buckket/der_gentleman/scraper"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/tcnksm/go-input"
 	"log"
 	"net/url"
 	"os"
@@ -71,7 +72,37 @@ func scrape(cmd *cobra.Command, args []string) {
 		env.Insta = goinsta.New(viper.GetString("INSTAGRAM_USERNAME"), viper.GetString("INSTAGRAM_PASSWORD"))
 		err = env.Insta.Login()
 		if err != nil {
-			log.Fatal(err)
+			switch v := err.(type) {
+				case goinsta.ChallengeError:
+					err := env.Insta.Challenge.Process(v.Challenge.APIPath)
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					ui := &input.UI{
+						Writer: os.Stdout,
+						Reader: os.Stdin,
+					}
+
+					query := "Enter security code: "
+					code, err := ui.Ask(query, &input.Options{
+						Default:  "000000",
+						Required: true,
+						Loop:     true,
+					})
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					err = env.Insta.Challenge.SendSecurityCode(code)
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					env.Insta.Account = env.Insta.Challenge.LoggedInUser
+			default:
+				log.Fatal(err)
+			}
 		}
 		env.Insta.Export(viper.GetString("GOINSTA_FILE"))
 	} else {

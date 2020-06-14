@@ -14,6 +14,7 @@ require (
 	github.com/mb-14/gomarkov v0.0.0-20190125094512-044dd0dcb5e7
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.6.2
+	github.com/tcnksm/go-input v0.0.0-20180404061846-548a7d7a8ee8
 )
 
 replace github.com/ahmdrz/goinsta/v2 => github.com/buckket/goinsta/v2 v2.4.6-0.20200401235525-0daaded545d6

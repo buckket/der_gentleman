@@ -97,6 +97,16 @@ func (env *Env) HandleUser(user *goinsta.User) {
 		}
 	}
 
+	if user.Username != dbProfile.Username {
+		log.Printf("Username changed from %s to %s, updating database", dbProfile.Username, user.Username)
+		dbProfile.Username = user.Username
+		err = env.DB.ProfileUpdate(dbProfile)
+		if err != nil {
+			log.Printf("error while updating profile: %s", err)
+			return
+		}
+	}
+
 	if time.Since(dbProfile.LastCheck) < 1*time.Hour {
 		log.Printf("Skipping %s, was already checked recently", user.Username)
 		return

@@ -73,33 +73,33 @@ func scrape(cmd *cobra.Command, args []string) {
 		err = env.Insta.Login()
 		if err != nil {
 			switch v := err.(type) {
-				case goinsta.ChallengeError:
-					err := env.Insta.Challenge.Process(v.Challenge.APIPath)
-					if err != nil {
-						log.Fatal(err)
-					}
+			case goinsta.ChallengeError:
+				err := env.Insta.Challenge.Process(v.Challenge.APIPath)
+				if err != nil {
+					log.Fatal(err)
+				}
 
-					ui := &input.UI{
-						Writer: os.Stdout,
-						Reader: os.Stdin,
-					}
+				ui := &input.UI{
+					Writer: os.Stdout,
+					Reader: os.Stdin,
+				}
 
-					query := "Enter security code: "
-					code, err := ui.Ask(query, &input.Options{
-						Default:  "000000",
-						Required: true,
-						Loop:     true,
-					})
-					if err != nil {
-						log.Fatal(err)
-					}
+				query := "Enter security code: "
+				code, err := ui.Ask(query, &input.Options{
+					Default:  "000000",
+					Required: true,
+					Loop:     true,
+				})
+				if err != nil {
+					log.Fatal(err)
+				}
 
-					err = env.Insta.Challenge.SendSecurityCode(code)
-					if err != nil {
-						log.Fatal(err)
-					}
+				err = env.Insta.Challenge.SendSecurityCode(code)
+				if err != nil {
+					log.Fatal(err)
+				}
 
-					env.Insta.Account = env.Insta.Challenge.LoggedInUser
+				env.Insta.Account = env.Insta.Challenge.LoggedInUser
 			default:
 				log.Fatal(err)
 			}

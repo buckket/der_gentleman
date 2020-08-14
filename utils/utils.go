@@ -1,6 +1,9 @@
 package utils
 
-import "fmt"
+import (
+	"fmt"
+	"unicode/utf8"
+)
 
 func GenerateTweetURL(username string, id int64) string {
 	return fmt.Sprintf("https://twitter.com/%s/status/%d", username, id)
@@ -8,11 +11,18 @@ func GenerateTweetURL(username string, id int64) string {
 
 func TruncateString(str string, num int) (out string) {
 	out = str
-	if len(str) > num {
-		if num > 3 {
-			num -= 3
+	chars := 0
+	for i, r := range out {
+		if chars >= num-2 {
+			out = out[:i] + "…"
+			break
 		}
-		out = str[0:num] + "..."
+		rlen := utf8.RuneLen(r)
+		if rlen > 1 {
+			chars += 2
+		} else {
+			chars++
+		}
 	}
 	return out
 }

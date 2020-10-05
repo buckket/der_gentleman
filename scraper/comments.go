@@ -23,6 +23,7 @@ func (env *Env) handleComments(item *goinsta.Item, media *models.Media) {
 		return
 	}
 
+	env.Limit.WaitBeforeRequest()
 	item.Comments.Sync()
 	for item.Comments.Next() {
 		for _, comment := range item.Comments.Items {
@@ -51,9 +52,9 @@ func (env *Env) handleComments(item *goinsta.Item, media *models.Media) {
 
 				if viper.GetBool("TWITTER_ENABLE") {
 					td := time.Now().Sub(lastTweet)
-					if td < 5*time.Minute {
-						log.Printf("Last tweet was only %f minutes ago, waiting...", td.Minutes())
-						time.Sleep(5*time.Minute - td)
+					if td < 10*time.Minute {
+						log.Printf("Last tweet was only %s ago, waiting...", td.Round(time.Second).String())
+						time.Sleep(10*time.Minute - td)
 					}
 
 					tweet, err := env.Twitter.PostTweet(fmt.Sprintf("%s %s",
@@ -84,5 +85,6 @@ func (env *Env) handleComments(item *goinsta.Item, media *models.Media) {
 				}
 			}
 		}
+		env.Limit.WaitBeforeRequest()
 	}
 }

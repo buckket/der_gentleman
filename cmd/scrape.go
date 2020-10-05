@@ -5,6 +5,7 @@ import (
 	"github.com/ahmdrz/goinsta/v2"
 	"github.com/buckket/der_gentleman/database"
 	"github.com/buckket/der_gentleman/scraper"
+	"github.com/buckket/der_gentleman/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tcnksm/go-input"
@@ -58,6 +59,8 @@ func scrape(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
+	env.Limit = &utils.LimitController{}
+
 	env.Twitter = anaconda.NewTwitterApiWithCredentials(viper.GetString("TWITTER_ACCESS_TOKEN"),
 		viper.GetString("TWITTER_ACCESS_TOKEN_SECRET"),
 		viper.GetString("TWITTER_CONSUMER_KEY"),
@@ -70,10 +73,12 @@ func scrape(cmd *cobra.Command, args []string) {
 	_, err = os.Stat(viper.GetString("GOINSTA_FILE"))
 	if err != nil {
 		env.Insta = goinsta.New(viper.GetString("INSTAGRAM_USERNAME"), viper.GetString("INSTAGRAM_PASSWORD"))
+		env.Limit.WaitBeforeRequest()
 		err = env.Insta.Login()
 		if err != nil {
 			switch v := err.(type) {
 			case goinsta.ChallengeError:
+				env.Limit.WaitBeforeRequest()
 				err := env.Insta.Challenge.Process(v.Challenge.APIPath)
 				if err != nil {
 					log.Fatal(err)
@@ -94,6 +99,7 @@ func scrape(cmd *cobra.Command, args []string) {
 					log.Fatal(err)
 				}
 
+				env.Limit.WaitBeforeRequest()
 				err = env.Insta.Challenge.SendSecurityCode(code)
 				if err != nil {
 					log.Fatal(err)
@@ -112,6 +118,7 @@ func scrape(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	env.Limit.WaitBeforeRequest()
 	env.Target, err = env.Insta.Profiles.ByID(viper.GetInt64("INSTAGRAM_TARGET"))
 	if err != nil {
 		log.Fatal(err)
@@ -136,4 +143,6 @@ func scrape(cmd *cobra.Command, args []string) {
 		env.HandleUser(&u)
 		env.Stats.CompletedUsers++
 	}
+
+	env.Limit.WaitBeforeRequest()
 }

@@ -12,6 +12,7 @@ import (
 func (env *Env) GetUserIG(sync bool) ([]goinsta.User, error) {
 	var users []goinsta.User
 
+	env.Limit.WaitBeforeRequest()
 	followers := env.Target.Following()
 	for followers.Next() {
 		err := followers.Error()
@@ -19,6 +20,7 @@ func (env *Env) GetUserIG(sync bool) ([]goinsta.User, error) {
 			return nil, err
 		}
 		users = append(users, followers.Users...)
+		env.Limit.WaitBeforeRequest()
 	}
 
 	err := followers.Error()
@@ -46,12 +48,12 @@ func (env *Env) GetUserIG(sync bool) ([]goinsta.User, error) {
 	if sync {
 		for _, u := range users {
 			if u.IsPrivate {
+				env.Limit.WaitBeforeRequest()
 				err := u.Follow()
 				if err != nil {
 					log.Printf("coult not follow %s: %s", u.Username, err)
 				}
 				log.Printf("send follow request to %s", u.Username)
-				time.Sleep(1 * time.Minute)
 			}
 		}
 	}
@@ -107,11 +109,17 @@ func (env *Env) HandleUser(user *goinsta.User) {
 		}
 	}
 
-	if time.Since(dbProfile.LastCheck) < 1*time.Hour {
+	if time.Since(dbProfile.LastCheck) < 6*time.Hour {
 		log.Printf("Skipping %s, was already checked recently", user.Username)
 		return
 	}
 
+	if user.IsPrivate {
+		log.Printf("Skipping %s, private account", user.Username)
+		return
+	}
+
+	env.Limit.WaitBeforeRequest()
 	feed := user.Feed()
 	feed.Next()
 	err = feed.Error()

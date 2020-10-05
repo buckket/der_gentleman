@@ -4,6 +4,7 @@ import (
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/ahmdrz/goinsta/v2"
 	"github.com/buckket/der_gentleman/database"
+	"github.com/buckket/der_gentleman/utils"
 	"time"
 )
 
@@ -18,6 +19,7 @@ type Env struct {
 	Twitter *anaconda.TwitterApi
 	Target  *goinsta.User
 	Stats   *Stats
+	Limit   *utils.LimitController
 }
 
 var lastTweet time.Time
